@@ -1,4 +1,4 @@
-import { getTeamMatches } from './api.js';
+import { getLiveMatches } from './api.js';
 
 chrome.alarms.create('checkLiveMatches', { periodInMinutes: 5 });
 
@@ -10,26 +10,17 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 async function checkLiveMatches() {
   try {
-    const { selectedTeam } = await chrome.storage.local.get('selectedTeam');
-    if (!selectedTeam) return;
-
-    const matchesData = await getTeamMatches(selectedTeam.id);
-    const liveMatch = matchesData.matches.find(match => match.status === 'LIVE');
-
-    if (liveMatch) {
+    const liveMatches = await getLiveMatches();
+    liveMatches.forEach(match => {
       const notificationOptions = {
         type: 'basic',
         iconUrl: 'images/icon-128.png',
         title: 'Live Match Update',
-        message: `${liveMatch.homeTeam.name} ${liveMatch.score.fullTime.home} - ${liveMatch.score.fullTime.away} ${liveMatch.awayTeam.name}`
+        message: `${match.homeTeam.name} ${match.score.fullTime.home} - ${match.score.fullTime.away} ${match.awayTeam.name}`
       };
-
       chrome.notifications.create('liveMatchUpdate', notificationOptions);
-    }
+    });
   } catch (error) {
-    console.error('Error checking live matches:', error);
+    console.error('Error fetching live matches:', error);
   }
 }
-
-// Initial check when the extension is loaded
-checkLiveMatches();

@@ -1,41 +1,54 @@
-const API_KEY = '325167f3444f4b8dad4ee1be5399a440';
-const BASE_URL = 'https://api.football-data.org/v4';
+import { getTeamMatches, getTeamPlayers, getLeagueStandings, getLiveMatches } from './api.js';
 
-async function fetchFromAPI(endpoint) {
-    try {
-        const response = await fetch(`${BASE_URL}/${endpoint}`, {
-            headers: {
-                'X-Auth-Token': API_KEY
-            }
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data from API: ${response.status}`);
-        }
-        return response.json();
-    } catch (error) {
-        console.error('Error fetching data from API:', error);
-        throw error;
+document.addEventListener('DOMContentLoaded', async function() {
+    const teamNameElement = document.getElementById('teamName');
+    const matchesElement = document.getElementById('matches');
+    const standingsElement = document.getElementById('standings');
+    const playersElement = document.getElementById('players');
+
+    const { selectedTeam } = await chrome.storage.local.get('selectedTeam');
+    if (!selectedTeam) {
+        teamNameElement.textContent = 'No team selected';
+        return;
     }
+
+    teamNameElement.textContent = selectedTeam.name;
+
+    try {
+        const matches = await getTeamMatches(selectedTeam.id);
+        matchesElement.innerHTML = renderMatches(matches);
+
+        const players = await getTeamPlayers(selectedTeam.id);
+        playersElement.innerHTML = renderPlayers(players);
+
+        const standings = await getLeagueStandings('some_competition_id');  // Pass competition ID here
+        standingsElement.innerHTML = renderStandings(standings);
+    } catch (error) {
+        console.error('Error fetching team data:', error);
+    }
+});
+
+function renderMatches(matches) {
+    return matches.map(match => `
+        <div class="match">
+            <p>${match.homeTeam.name} vs ${match.awayTeam.name}</p>
+            <p>Score: ${match.score.fullTime.home} - ${match.score.fullTime.away}</p>
+        </div>
+    `).join('');
 }
 
-export async function getTeamMatches(teamId) {
-    return fetchFromAPI(`teams/${teamId}/matches?status=SCHEDULED,LIVE,FINISHED&limit=10`);
+function renderPlayers(players) {
+    return players.map(player => `
+        <div class="player">
+            <p>${player.name} (${player.position})</p>
+        </div>
+    `).join('');
 }
 
-export async function getTeamPlayers(teamId) {
-    return fetchFromAPI(`teams/${teamId}`);
-}
-
-export async function getLeagueStandings(competitionId) {
-    return fetchFromAPI(`competitions/${competitionId}/standings`);
-}
-
-export async function searchTeams(searchTerm) {
-    const response = await fetchFromAPI(`teams?search=${encodeURIComponent(searchTerm)}`);
-    return response.teams || [];
-}
-
-export async function getLiveMatches() {
-    const response = await fetchFromAPI('matches?status=LIVE');
-    return response.matches || [];
+function renderStandings(standings) {
+    return standings.map(team => `
+        <div class="standing">
+            <p>${team.position}. ${team.team.name} - ${team.points} points</p>
+        </div>
+    `).join('');
 }
