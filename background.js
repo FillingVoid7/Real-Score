@@ -1,31 +1,35 @@
-import { getLiveMatches } from './api.js';
+import { getTeamMatches } from './api.js';
 
-chrome.runtime.onInstalled.addListener(function() {
-    console.log('Live Soccer Scorer extension installed');
+chrome.alarms.create('checkLiveMatches', { periodInMinutes: 5 });
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'checkLiveMatches') {
+    checkLiveMatches();
+  }
 });
 
-function checkLiveMatches() {
-    chrome.storage.local.get('selectedTeam', function(data) {
-        if (data.selectedTeam) {
-            getLiveMatches()
-                .then(matchesData => {
-                    const teamMatch = matchesData.matches.find(match => 
-                        match.homeTeam.id === data.selectedTeam.id || match.awayTeam.id === data.selectedTeam.id
-                    );
-                    if (teamMatch) {
-                        chrome.notifications.create({
-                            type: 'basic',
-                            iconUrl: 'images/icon128.png',
-                            title: 'Live Match Update!',
-                            message: `${teamMatch.homeTeam.name} ${teamMatch.score.fullTime.home} - ${teamMatch.score.fullTime.away} ${teamMatch.awayTeam.name}`,
-                            priority: 2
-                        });
-                    }
-                })
-                .catch(error => console.error('Error checking live matches:', error));
-        }
-    });
+async function checkLiveMatches() {
+  try {
+    const { selectedTeam } = await chrome.storage.local.get('selectedTeam');
+    if (!selectedTeam) return;
+
+    const matchesData = await getTeamMatches(selectedTeam.id);
+    const liveMatch = matchesData.matches.find(match => match.status === 'LIVE');
+
+    if (liveMatch) {
+      const notificationOptions = {
+        type: 'basic',
+        iconUrl: 'images/icon-128.png',
+        title: 'Live Match Update',
+        message: `${liveMatch.homeTeam.name} ${liveMatch.score.fullTime.home} - ${liveMatch.score.fullTime.away} ${liveMatch.awayTeam.name}`
+      };
+
+      chrome.notifications.create('liveMatchUpdate', notificationOptions);
+    }
+  } catch (error) {
+    console.error('Error checking live matches:', error);
+  }
 }
 
-// Check for updates every 5 minutes
-setInterval(checkLiveMatches, 5 * 60 * 1000);
+// Initial check when the extension is loaded
+checkLiveMatches();
