@@ -1,54 +1,77 @@
 import { getTeamMatches, getTeamPlayers, getLeagueStandings, getLiveMatches } from './api.js';
 
 document.addEventListener('DOMContentLoaded', async function() {
-    const teamNameElement = document.getElementById('teamName');
-    const matchesElement = document.getElementById('matches');
-    const standingsElement = document.getElementById('standings');
-    const playersElement = document.getElementById('players');
+  const selectedTeamNameElement = document.getElementById('selectedTeamName');
+  const liveMatchInfoElement = document.getElementById('liveMatchInfo');
+  const recentMatchesListElement = document.getElementById('recentMatchesList');
+  const upcomingMatchesListElement = document.getElementById('upcomingMatchesList');
+  const standingsBodyElement = document.getElementById('standingsBody');
 
-    const { selectedTeam } = await chrome.storage.local.get('selectedTeam');
-    if (!selectedTeam) {
-        teamNameElement.textContent = 'No team selected';
-        return;
+  const { selectedTeam } = await chrome.storage.local.get('selectedTeam');
+  if (!selectedTeam) {
+    selectedTeamNameElement.textContent = 'No team selected';
+    return;
+  }
+
+  selectedTeamNameElement.textContent = selectedTeam.name;
+
+  try {
+    // Fetch and display live matches
+    const liveMatches = await getLiveMatches();
+    liveMatchInfoElement.innerHTML = renderLiveMatches(liveMatches);
+
+    // Fetch and display team matches
+    const matches = await getTeamMatches(selectedTeam.id);
+    const recentMatches = matches.matches.filter(match => match.status === 'FINISHED');
+    const upcomingMatches = matches.matches.filter(match => match.status === 'SCHEDULED');
+
+    recentMatchesListElement.innerHTML = renderMatches(recentMatches);
+    upcomingMatchesListElement.innerHTML = renderMatches(upcomingMatches);
+
+    // Fetch and display standings
+    const competitions = await getCompetitions();
+    const teamCompetition = competitions.competitions.find(comp => comp.id === selectedTeam.competitionId);
+    if (teamCompetition) {
+      const standings = await getLeagueStandings(teamCompetition.id);
+      standingsBodyElement.innerHTML = renderStandings(standings.standings[0].table);
     }
-
-    teamNameElement.textContent = selectedTeam.name;
-
-    try {
-        const matches = await getTeamMatches(selectedTeam.id);
-        matchesElement.innerHTML = renderMatches(matches);
-
-        const players = await getTeamPlayers(selectedTeam.id);
-        playersElement.innerHTML = renderPlayers(players);
-
-        const standings = await getLeagueStandings('some_competition_id');  // Pass competition ID here
-        standingsElement.innerHTML = renderStandings(standings);
-    } catch (error) {
-        console.error('Error fetching team data:', error);
-    }
+  } catch (error) {
+    console.error('Error fetching team data:', error);
+  }
 });
 
-function renderMatches(matches) {
-    return matches.map(match => `
-        <div class="match">
-            <p>${match.homeTeam.name} vs ${match.awayTeam.name}</p>
-            <p>Score: ${match.score.fullTime.home} - ${match.score.fullTime.away}</p>
-        </div>
-    `).join('');
+function renderLiveMatches(matches) {
+  if (matches.length === 0) {
+    return '<p>No live matches at the moment.</p>';
+  }
+  return matches.map(match => `
+    <div class="match live">
+      <p>${match.homeTeam.name} vs ${match.awayTeam.name}</p>
+      <p>Score: ${match.score.fullTime.home} - ${match.score.fullTime.away}</p>
+    </div>
+  `).join('');
 }
 
-function renderPlayers(players) {
-    return players.map(player => `
-        <div class="player">
-            <p>${player.name} (${player.position})</p>
-        </div>
-    `).join('');
+function renderMatches(matches) {
+  return matches.map(match => `
+    <li class="match">
+      <p>${match.homeTeam.name} vs ${match.awayTeam.name}</p>
+      <p>Date: ${new Date(match.utcDate).toLocaleDateString()}</p>
+      ${match.status === 'FINISHED' ? `<p>Score: ${match.score.fullTime.home} - ${match.score.fullTime.away}</p>` : ''}
+    </li>
+  `).join('');
 }
 
 function renderStandings(standings) {
-    return standings.map(team => `
-        <div class="standing">
-            <p>${team.position}. ${team.team.name} - ${team.points} points</p>
-        </div>
-    `).join('');
+  return standings.map(team => `
+    <tr>
+      <td>${team.position}</td>
+      <td>${team.team.name}</td>
+      <td>${team.playedGames}</td>
+      <td>${team.won}</td>
+      <td>${team.draw}</td>
+      <td>${team.lost}</td>
+      <td>${team.goalDifference}</td>
+    </tr>
+  `).join('');
 }
