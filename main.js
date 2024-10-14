@@ -1,4 +1,10 @@
-import { getTeamMatches, getTeamPlayers, getLeagueStandings, getLiveMatches } from './api.js';
+import { 
+  getScheduleMatches, 
+  getLiveMatches, 
+  getFinishedMatches, 
+  getCompetitions, 
+  getLeagueStandings 
+} from "./api.js";
 
 document.addEventListener('DOMContentLoaded', async function() {
   const selectedTeamNameElement = document.getElementById('selectedTeamName');
@@ -16,17 +22,16 @@ document.addEventListener('DOMContentLoaded', async function() {
   selectedTeamNameElement.textContent = selectedTeam.name;
 
   try {
-    // Fetch and display live matches
-    const liveMatches = await getLiveMatches();
-    liveMatchInfoElement.innerHTML = renderLiveMatches(liveMatches);
+    // Fetch and display matches (live, recent, upcoming)
+    const [liveMatches, recentMatches, upcomingMatches] = await Promise.all([
+      getLiveMatches(selectedTeam.id),
+      getFinishedMatches(selectedTeam.id),
+      getScheduleMatches(selectedTeam.id)
+    ]);
 
-    // Fetch and display team matches
-    const matches = await getTeamMatches(selectedTeam.id);
-    const recentMatches = matches.matches.filter(match => match.status === 'FINISHED');
-    const upcomingMatches = matches.matches.filter(match => match.status === 'SCHEDULED');
-
-    recentMatchesListElement.innerHTML = renderMatches(recentMatches);
-    upcomingMatchesListElement.innerHTML = renderMatches(upcomingMatches);
+    liveMatchInfoElement.innerHTML = renderLiveMatches(liveMatches.matches || []);
+    recentMatchesListElement.innerHTML = renderMatches(recentMatches.matches || []);
+    upcomingMatchesListElement.innerHTML = renderMatches(upcomingMatches.matches || []);
 
     // Fetch and display standings
     const competitions = await getCompetitions();

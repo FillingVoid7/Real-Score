@@ -18,8 +18,16 @@ export async function searchTeams(searchTerm) {
   return response.teams || [];
 }
 
-export async function getTeamMatches(teamId) {
-  return fetchFromAPI(`teams/${teamId}/matches?status=SCHEDULED,LIVE,FINISHED&limit=10`);
+export async function getScheduleMatches(teamId) {
+    return fetchFromAPI(`teams/${teamId}/matches?status=SCHEDULED&limit=10`);
+    }
+
+export async function getLiveMatches(teamId) {
+    return fetchFromAPI(`teams/${teamId}/matches?status=LIVE&limit=10`);
+}
+
+export async function getFinishedMatches(teamId) {
+    return fetchFromAPI(`teams/${teamId}/matches?status=FINISHED&limit=10`);
 }
 
 export async function getTeamPlayers(teamId) {
@@ -28,11 +36,6 @@ export async function getTeamPlayers(teamId) {
 
 export async function getLeagueStandings(competitionId) {
   return fetchFromAPI(`competitions/${competitionId}/standings`);
-}
-
-export async function getLiveMatches() {
-  const response = await fetchFromAPI('matches?status=LIVE');
-  return response.matches || [];
 }
 
 export async function getCompetitions() {
