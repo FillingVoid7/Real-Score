@@ -15,11 +15,9 @@
 ## 🚀 Features
 
 - **Team Search and Selection:** Easily search for and select your favorite teams.
-- **Live Match Updates:** Receive real-time notifications for ongoing matches, including goals and important events.
 - **Upcoming Matches:** View the schedule for your team's upcoming matches, complete with date, time, and opponent details.
 - **Recent Matches:** Stay informed about your team's past performance with full-time results and match statistics.
 - **League Standings:** Follow live standings for major leagues (e.g., Premier League, La Liga).
-- **Switch Between Competitions:** Track multiple competitions your team is participating in.
 ---
 
 ## 🖥 Full Page View
@@ -52,10 +50,7 @@ Unlike most extensions that limit information to a small popup, **Real Score** o
    - Click on the team name to select it and save it for future use.
 
 2. **View Team Info:**
-   - The full-page view will display upcoming and recent matches, live scores, and player statistics for your team.
-
-3. **Get Real-time Updates:**
-   - Enable notifications to receive live updates for goals, red cards, and other key events.
+   - The full-page view will display upcoming and recent matches for your team.
 
 ---
 
