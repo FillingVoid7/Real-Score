@@ -1,12 +1,12 @@
-import { 
-  getScheduleMatches, 
-  getLiveMatches, 
-  getFinishedMatches, 
-  getCompetitions, 
-  getLeagueStandings 
+import {
+  getScheduleMatches,
+  getLiveMatches,
+  getFinishedMatches,
+  getCompetitions,
+  getLeagueStandings
 } from "./api.js";
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
   const selectedTeamNameElement = document.getElementById('selectedTeamName');
   const liveMatchInfoElement = document.getElementById('liveMatchInfo');
   const recentMatchesListElement = document.getElementById('recentMatchesList');
@@ -19,10 +19,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     return;
   }
 
+  console.log('Selected team:', selectedTeam);
+
   selectedTeamNameElement.textContent = selectedTeam.name;
 
   try {
-    // Fetch and display matches (live, recent, upcoming)
     const [liveMatches, recentMatches, upcomingMatches] = await Promise.all([
       getLiveMatches(selectedTeam.id),
       getFinishedMatches(selectedTeam.id),
@@ -30,20 +31,35 @@ document.addEventListener('DOMContentLoaded', async function() {
     ]);
 
     liveMatchInfoElement.innerHTML = renderLiveMatches(liveMatches.matches || []);
-    recentMatchesListElement.innerHTML = renderMatches(recentMatches.matches || []);
-    upcomingMatchesListElement.innerHTML = renderMatches(upcomingMatches.matches || []);
 
-    // Fetch and display standings
+    recentMatchesListElement.innerHTML = renderMatches(recentMatches.matches || [], 5);
+    upcomingMatchesListElement.innerHTML = renderMatches(upcomingMatches.matches || [], 5);
+
+    if (!selectedTeam.runningCompetitions || selectedTeam.runningCompetitions.length === 0) {
+      console.log('No running competitions for the selected team.');
+      standingsBodyElement.innerHTML = '<tr><td colspan="7">No running competitions for the selected team.</td></tr>';
+      return;
+    }
+
     const competitions = await getCompetitions();
-    const teamCompetition = competitions.competitions.find(comp => comp.id === selectedTeam.competitionId);
+
+    const teamCompetition = selectedTeam.runningCompetitions.find(teamComp => {
+      return competitions.competitions.some(apiComp => apiComp.id === teamComp.id);
+    });
+
     if (teamCompetition) {
+      console.log('Team competition found:', teamCompetition);
       const standings = await getLeagueStandings(teamCompetition.id);
       standingsBodyElement.innerHTML = renderStandings(standings.standings[0].table);
+    } else {
+      console.log('No matching competition found for the team.');
+      standingsBodyElement.innerHTML = '<tr><td colspan="7">Competition not found.</td></tr>';
     }
   } catch (error) {
     console.error('Error fetching team data:', error);
   }
 });
+
 
 function renderLiveMatches(matches) {
   if (matches.length === 0) {
@@ -57,8 +73,10 @@ function renderLiveMatches(matches) {
   `).join('');
 }
 
-function renderMatches(matches) {
-  return matches.map(match => `
+function renderMatches(matches, limit) {
+  const limitedMatches = matches.slice(0, limit);
+
+  return limitedMatches.map(match => `
     <li class="match">
       <p>${match.homeTeam.name} vs ${match.awayTeam.name}</p>
       <p>Date: ${new Date(match.utcDate).toLocaleDateString()}</p>

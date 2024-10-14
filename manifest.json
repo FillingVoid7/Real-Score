@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Football Team Tracker",
   "version": "1.0",
-  "description": "Track your favorite football team's matches, standings, and player statistics with live updates.",
+  "description": "Track your favorite football team's matches, standings with live updates.",
   "permissions": [
     "storage",
     "alarms",
@@ -18,7 +18,10 @@
       "16": "images/icon-16.png",
       "48": "images/icon-48.png",
       "128": "images/icon-128.png"
-    }
+    },
+    "default_title": "Real Score",
+    "default_width": 600,
+    "default_height": 800
   },
   "icons": {
     "16": "images/icon-16.png",

@@ -16,10 +16,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     data.forEach(team => {
                         const li = document.createElement('li');
                         li.textContent = team.name;
-                        li.addEventListener('click', function() {
-                            chrome.storage.local.set({selectedTeam: {id: team.id, name: team.name}}, function() {
-                                console.log('Team saved:', team.name);
+                        li.addEventListener('click', async function() {
+                            // Fetch team details including runningCompetitions
+                            const teamDetails = await searchTeams(team.name);
+                            const selectedTeamDetails = teamDetails.find(t => t.id === team.id);
+
+                            chrome.storage.local.set({
+                                selectedTeam: {
+                                    id: team.id,
+                                    name: team.name,
+                                    runningCompetitions: selectedTeamDetails.runningCompetitions
+                                }
+                            }, function() {
+                                console.log('Team saved with running competitions:', team.name, selectedTeamDetails.runningCompetitions);
                             });
+
                             searchInput.value = team.name;
                             searchResults.innerHTML = '';
                         });

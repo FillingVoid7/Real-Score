@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,28 +8,29 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="container" id="root">
         <header>
             <h1>Real Score</h1>
             <h2 id="selectedTeamName"></h2>
-        </header>   
+        </header>
         <main>
-            <section id="liveMatch">
-                <h2>Live Match</h2>
+            <section>
+                <h2>Live Matches</h2>
                 <div id="liveMatchInfo"></div>
             </section>
-            <section id = "recentMatches">
+            <section>
                 <h2>Recent Matches</h2>
                 <ul id="recentMatchesList"></ul>
             </section>
-            <section id = "upcomingMatches">
+            <section>
                 <h2>Upcoming Matches</h2>
-                <ul id="upcomingMatchesList"></ul>  
+                <ul id="upcomingMatchesList"></ul>
             </section>
-            <section id="standings">
+            <section>
                 <h2>Standings</h2>
-                <table id="standingTable">
+                <table>
                     <thead>
                         <tr>
                             <th>Position</th>
@@ -37,14 +39,16 @@
                             <th>Won</th>
                             <th>Drawn</th>
                             <th>Lost</th>
-                            <th>GD</th>
+                            <th>Goal Difference</th>
                         </tr>
                     </thead>
                     <tbody id="standingsBody"></tbody>
                 </table>
             </section>
         </main>
-     </div>
+
+    </div>
     <script src="main.js" type="module"></script>
 </body>
+
 </html>
